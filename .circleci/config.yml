@@ -82,9 +82,6 @@ jobs:
       - run:
           name: apt_get_update
           command: sudo apt-get -qq update
-      - run:
-          name: gem_install
-          command: sudo gem install fpm
       - run: mkdir -p ~/artifacts
       - run:
           name: build_deb_amd64
