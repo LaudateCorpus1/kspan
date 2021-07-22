@@ -37,8 +37,7 @@ commands:
           GOOS=<< parameters.os >> \
           GOARCH=<< parameters.arch >> \
           go build -ldflags "-X main.BuildID=${CIRCLE_TAG}" \
-          -o $GOPATH/bin/kspan-<< parameters.os >>-<< parameters.arch >> \
-          ./cmd/kspan
+          -o $GOPATH/bin/kspan-<< parameters.os >>-<< parameters.arch >>
   ccc-publish:
     parameters:
       docker_registry:
