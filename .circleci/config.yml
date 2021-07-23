@@ -39,7 +39,7 @@ jobs:
       - run:
           name: create helm package
           command: |
-             /deploy/scripts/dry-run.sh
+             /deploy/dry-run
   publish-and-deploy-service:
     executor: ccc
     parameters:
