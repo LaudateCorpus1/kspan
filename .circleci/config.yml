@@ -9,7 +9,7 @@ executors:
             username: $DOCKER_HUB_USER
             password: $DOCKER_HUB_PASSWORD
       environment:
-        NAME: lifecycle-manager
+        NAME: kpan
         DOCKERFILE_PATH: Dockerfile
         DEPLOY_TYPE: helm
         DEPLOY_CONTAINER_NAME: 183081753049.dkr.ecr.us-east-1.amazonaws.com/circleci/kspan
@@ -34,12 +34,17 @@ jobs:
             CONTAINER_VERSION="<< parameters.upstream_image_version >>-${CIRCLE_BUILD_NUM}-$(git rev-parse --short HEAD)" publish
   lint-helm-chart:
     executor: ccc
+    environment:
+      # These need to match the variables in your deployment job to get a meaningful diff
+      NAME: kspan
+      VALUES_FILE: k8s-values.yml
     steps:
       - checkout
       - run:
           name: create helm package
           command: |
              /deploy/dry-run
+
   publish-and-deploy-service:
     executor: ccc
     parameters:
