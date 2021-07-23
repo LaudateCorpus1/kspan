@@ -2,6 +2,11 @@
 version: 2.1
 
 executors:
+  linuxgo:
+    parameters:
+    working_directory: /go/src/github.com/weaveworks-experiments/kspan
+    docker:
+      - image: circleci/golang:1.16
   ccc:
       docker:
         - image: circleci/command-convenience:0.1
@@ -39,7 +44,7 @@ jobs:
       - run:
           name: create helm package
           command: |
-            /deploy/generate-chart
+             /deploy/scripts/dry-run.sh
   publish-and-deploy-service:
     executor: ccc
     parameters:
@@ -59,6 +64,14 @@ jobs:
 workflows:
   test-publish-deploy:
     jobs:
+      - test:
+        executor: linuxgo
+        steps:
+          - checkout
+          - run:
+              name: go_test
+              command: go test --timeout 10s -v ./...
+
       - test-twistlock:
           upstream_image_version: 0.4.3
           context: org-global
