@@ -1,21 +1,20 @@
   
 version: 2.1
 
-
 executors:
-ccc:
-    docker:
-      - image: circleci/command-convenience:0.1
-        auth:
-          username: $DOCKER_HUB_USER
-          password: $DOCKER_HUB_PASSWORD
-    environment:
-      NAME: lifecycle-manager
-      DOCKERFILE_PATH: Dockerfile
-      DEPLOY_TYPE: helm
-      DEPLOY_CONTAINER_NAME: 183081753049.dkr.ecr.us-east-1.amazonaws.com/circleci/kspan
-      DOCKER_REGISTRY: ecr
-      NAMESPACE: sre
+  ccc:
+      docker:
+        - image: circleci/command-convenience:0.1
+          auth:
+            username: $DOCKER_HUB_USER
+            password: $DOCKER_HUB_PASSWORD
+      environment:
+        NAME: lifecycle-manager
+        DOCKERFILE_PATH: Dockerfile
+        DEPLOY_TYPE: helm
+        DEPLOY_CONTAINER_NAME: 183081753049.dkr.ecr.us-east-1.amazonaws.com/circleci/kspan
+        DOCKER_REGISTRY: ecr
+        NAMESPACE: sre
 
 jobs:
   test-twistlock:
