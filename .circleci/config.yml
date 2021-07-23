@@ -1,119 +1,78 @@
   
 version: 2.1
 
-orbs:
-  aws-cli: circleci/aws-cli@0.1.13
-  docker: circleci/docker@1.3.0
 
 executors:
-  linuxgo:
-    parameters:
-    working_directory: /go/src/github.com/weaveworks-experiments/kspan
-    docker:
-      - image: circleci/golang:1.16
-  ccc:
+ccc:
     docker:
       - image: circleci/command-convenience:0.1
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
+    environment:
+      NAME: lifecycle-manager
+      DOCKERFILE_PATH: Dockerfile
+      DEPLOY_TYPE: helm
+      DEPLOY_CONTAINER_NAME: 183081753049.dkr.ecr.us-east-1.amazonaws.com/circleci/kspan
+      DOCKER_REGISTRY: ecr
+      NAMESPACE: sre
 
-
-commands:
-  go-build:
+jobs:
+  test-twistlock:
+    executor: ccc
     parameters:
-      os:
-        description: Target operating system
-        type: enum
-        enum: ["linux", "darwin"]
-        default: "linux"
-      arch:
-        description: Target architecture
-        type: enum
-        enum: ["amd64", "arm64"]
-        default: "amd64"
-    steps:
-      - run: |
-          GOOS=<< parameters.os >> \
-          GOARCH=<< parameters.arch >> \
-          go build -ldflags "-X main.BuildID=${CIRCLE_TAG}" \
-          -o $GOPATH/bin/kspan-<< parameters.os >>-<< parameters.arch >>
-  ccc-publish:
-    parameters:
-      docker_registry:
-        type: enum
-        enum: ["all", "none"]
-        default: "none"
+      upstream_image_version:
+        description: the upstream version tag of the base image
+        type: string
+    environment:
+      DOCKER_REGISTRY: none
+      EXTRA_DOCKER_BUILD_ARGS: --build-arg UPSTREAM_IMAGE_VERSION=<< parameters.upstream_image_version >>
     steps:
       - checkout
       - setup_remote_docker
-      - attach_workspace:
-          at: .
       - run:
-          command: publish
-          environment:
-            NAME: kspan
-            MAJOR_VERSION: "0.0"
-            DOCKERFILE_PATH: Dockerfile.circleci
-            DOCKER_REGISTRY: <<parameters.docker_registry>>
-
-jobs:
-  test:
-    executor: linuxgo
+          command: |
+            CONTAINER_VERSION="<< parameters.upstream_image_version >>-${CIRCLE_BUILD_NUM}-$(git rev-parse --short HEAD)" publish
+  lint-helm-chart:
+    executor: ccc
     steps:
       - checkout
       - run:
-          name: go_test
-          command: go test --timeout 10s -v ./...
-
-  build:
-    executor: linuxgo
+          name: create helm package
+          command: |
+            /deploy/generate-chart
+  publish-and-deploy-service:
+    executor: ccc
+    parameters:
+      upstream_image_version:
+        description: the upstream version tag of the base image
+        type: string
+    environment:
+      EXTRA_DOCKER_BUILD_ARGS: --build-arg UPSTREAM_IMAGE_VERSION=<< parameters.upstream_image_version >>
     steps:
       - checkout
-      - go-build:
-          os: linux
-          arch: amd64
-      - go-build:
-          os: linux
-          arch: arm64
-      - go-build:
-          os: darwin
-          arch: amd64
+      - setup_remote_docker
       - run:
-          name: apt_get_update
-          command: sudo apt-get -qq update
-      - run: mkdir -p ~/artifacts
-      - run:
-          name: build_deb_amd64
-          command: ./build-pkg.sh -m amd64 -v "${CIRCLE_TAG}" -t deb && mv *.deb ~/artifacts
-      - run:
-          name: build_deb_arm64
-          command: ./build-pkg.sh -m arm64 -v "${CIRCLE_TAG}" -t deb && mv *.deb ~/artifacts
-      - run:
-          name: build_rpm_amd64
-          command: ./build-pkg.sh -m amd64 -v "${CIRCLE_TAG}" -t rpm && mv *.rpm ~/artifacts
-      - run:
-          name: copy_binaries
-          command: cp $GOPATH/bin/kspan-* ~/artifacts
-      - run: echo "finished builds" && find ~/artifacts -ls
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - artifacts
-      - store_artifacts:
-          path: ~/artifacts          
-
+          command: |
+            CONTAINER_VERSION="<< parameters.upstream_image_version >>-${CIRCLE_BUILD_NUM}-$(git rev-parse --short HEAD)" publish
+      - run: deploy
 
 workflows:
-  build:
+  test-publish-deploy:
     jobs:
-      - test:
+      - test-twistlock:
+          upstream_image_version: 0.4.3
+          context: org-global
           filters:
-            tags:
-              only: /.*/
-      - build:
+            branches:
+              ignore: main
+      - lint-helm-chart:
+          context: org-global
+      - publish-and-deploy-service:
+          upstream_image_version: 0.4.3
           requires:
-            - test
+            - lint-helm-chart
+          context: org-global
           filters:
-            tags:
-              only: /.*/
+            branches:
+              only: main
