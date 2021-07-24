@@ -5,8 +5,7 @@ deployment:
   replicas: 1
   containers:
     kspan:
-     - command:
-        - /manager
+     - command: /manager
         args:
         - --enable-leader-election
         image: kspan:latest
