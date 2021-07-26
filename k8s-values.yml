@@ -1,24 +1,19 @@
-
 team: SRE
-
 deployment:
   replicas: 1
   containers:
     kspan:
-     - command: /manager
-        args:
-        - --enable-leader-election
-        image: kspan:latest
-        name: kspan
+      image: "<<image_name>>"
+      name: kspan
+      command: 
+      - /manager
+      args:
+      - --enable-leader-election
+      resources:
+        limits:
+          cpu: 100m
+          memory: 30Mi
+        requests:
+          cpu: 100m
+          memory: 20Mi
 
-resources:
-  limits:
-    cpu: 100m
-    memory: 30Mi
-  requests:
-    cpu: 100m
-    memory: 20Mi
-
-selector:
-    matchLabels:
-      control-plane: kspan-manager

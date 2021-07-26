@@ -22,7 +22,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o manager 
 FROM gcr.io/distroless/static:nonroot
 
 # TODO 
-#update packages and container
+# update packages and container
+# This distro dones't have any package manager :/
+
 
 WORKDIR /
 COPY --from=builder /workspace/manager .
