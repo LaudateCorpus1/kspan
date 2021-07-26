@@ -78,6 +78,6 @@ workflows:
           requires:
             - lint-helm-chart
           context: org-global
-          filters:
-            branches:
-              only: main
+          # filters:
+            # branches:
+              # only: main
