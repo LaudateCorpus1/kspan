@@ -55,11 +55,8 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          command: |
-            CONTAINER_VERSION="<< parameters.upstream_image_version >>-${CIRCLE_BUILD_NUM}-$(git rev-parse --short HEAD)" publish
-      - run: /deploy/dry-run
-
+      - run: publish
+      - run: deploy
 workflows:
   test-publish-deploy:
     jobs:
