@@ -59,7 +59,7 @@ jobs:
       - run:
           command: |
             CONTAINER_VERSION="<< parameters.upstream_image_version >>-${CIRCLE_BUILD_NUM}-$(git rev-parse --short HEAD)" publish
-      - run: deploy
+      - run: /deploy/dry-run
 
 workflows:
   test-publish-deploy:
