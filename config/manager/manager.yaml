@@ -25,6 +25,9 @@ spec:
       containers:
       - command:
         - /manager
+        args:
+        - -otlp-addr=opentelemetry-collector.sre:55680
+        # What is this image?
         image: controller:latest
         name: manager
         resources:
