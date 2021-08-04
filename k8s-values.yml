@@ -8,7 +8,7 @@ deployment:
       command: 
       - /manager
       args:
-      - --enable-leader-election
+      - --otlp-addr=opentelemetry-collector.sre:55680
       resources:
         limits:
           cpu: 100m
